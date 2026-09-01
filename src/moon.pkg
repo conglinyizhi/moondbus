@@ -1,8 +1,10 @@
 import {
-  "moonbitlang/core/encoding/utf8" @utf8,
-  "moonbitlang/core/buffer" @buffer,
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/buffer",
 }
-options(
-  "native-stub": ["stub.c"],
-)
+
 supported_targets = "+native"
+
+options(
+  "native-stub": [ "stub.c" ],
+)

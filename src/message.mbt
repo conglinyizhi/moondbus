@@ -6,14 +6,28 @@
 
 // —— 消息类型 ——
 const MSG_METHOD_CALL : Byte = 1
+
+///|
 const MSG_METHOD_RETURN : Byte = 2
 
 // —— Header Field Code ——
+
+///|
 const FIELD_PATH : Byte = 1
+
+///|
 const FIELD_INTERFACE : Byte = 2
+
+///|
 const FIELD_MEMBER : Byte = 3
+
+///|
 const FIELD_REPLY_SERIAL : Byte = 5
+
+///|
 const FIELD_DESTINATION : Byte = 6
+
+///|
 const FIELD_SIGNATURE : Byte = 8
 
 ///|
@@ -57,14 +71,14 @@ fn put_signature(b : Buffer, s : String) -> Unit {
 /// y = field code，v = variant（signature + 值）。
 /// 注意：值为 g 类型时（如 SIGNATURE 字段），长度是 1 字节而非 u32。
 fn put_field(b : Buffer, code : Byte, sig : String, value : String) -> Unit {
-  align_buf(b, 8)          // struct 对齐到 8
-  b.write_byte(code)       // y
-  put_signature(b, sig)    // variant 的 signature（g：1字节长度）
+  align_buf(b, 8) // struct 对齐到 8
+  b.write_byte(code) // y
+  put_signature(b, sig) // variant 的 signature（g：1字节长度）
   if sig == "g" {
     // 值也是 g 类型：1 字节长度 + 内容 + NUL（无需 4 对齐）
     put_signature(b, value)
   } else {
-    align_buf(b, 4)        // s/o 值对齐到 4
+    align_buf(b, 4) // s/o 值对齐到 4
     put_string(b, value)
   }
 }
@@ -81,12 +95,12 @@ pub fn build_method_call(
   serial : Int,
 ) -> Bytes {
   let b = Buffer::Buffer()
-  b.write_byte(0x6C)        // endianness 'l'
+  b.write_byte(0x6C) // endianness 'l'
   b.write_byte(MSG_METHOD_CALL)
-  b.write_byte(0)           // flags
-  b.write_byte(1)           // version
+  b.write_byte(0) // flags
+  b.write_byte(1) // version
   put_u32(b, body.length()) // body length
-  put_u32(b, serial)        // serial
+  put_u32(b, serial) // serial
 
   // header fields a(yv)，顺序与标准实现一致（影响对齐填充）
   let hf = Buffer::Buffer()
@@ -113,9 +127,9 @@ pub fn parse_message(data : Bytes) -> Message? {
   if data.length() < 16 {
     return None
   }
-  let msg_type = data[1]            // offset 1 = type
-  let body_len = read_u32(data, 4)  // offset 4 = body length
-  let serial = read_u32(data, 8)    // offset 8 = serial
+  let msg_type = data[1] // offset 1 = type
+  let body_len = read_u32(data, 4) // offset 4 = body length
+  let serial = read_u32(data, 8) // offset 8 = serial
   let fields_len = read_u32(data, 12) // offset 12 = fields length
   // fields 之后对齐到 8，再是 body
   let mut body_start = 16 + fields_len
@@ -127,7 +141,7 @@ pub fn parse_message(data : Bytes) -> Message? {
   } else {
     Bytes::makei(0, fn(_) { 0 })
   }
-  Some({ msg_type, serial, body, reply_serial: None })
+  Some({ msg_type, serial, body, reply_serial: None, })
 }
 
 ///|
@@ -189,7 +203,15 @@ pub fn parse_header_fields(data : Bytes) -> HeaderFields {
   let mut reply_serial : Int? = None
   let mut signature : String? = None
   if data.length() < 16 {
-    return { path, interface, member, destination, sender, reply_serial, signature }
+    return {
+      path,
+      interface,
+      member,
+      destination,
+      sender,
+      reply_serial,
+      signature,
+    }
   }
   let fields_len = read_u32(data, 12)
   let start = 16
@@ -216,7 +238,7 @@ pub fn parse_header_fields(data : Bytes) -> HeaderFields {
     } else {
       ""
     }
-    i = i + sig_len + 1  // 跳过签名内容 + NUL
+    i = i + sig_len + 1 // 跳过签名内容 + NUL
     // 值
     if sig == "u" {
       // u32：先对齐到 4
@@ -273,7 +295,7 @@ pub fn parse_header_fields(data : Bytes) -> HeaderFields {
       }
     }
   }
-  { path, interface, member, destination, sender, reply_serial, signature }
+  { path, interface, member, destination, sender, reply_serial, signature, }
 }
 
 ///|
@@ -297,10 +319,10 @@ pub fn build_method_return(
   serial : Int,
 ) -> Bytes {
   let b = Buffer::Buffer()
-  b.write_byte(0x6C)             // little endian
+  b.write_byte(0x6C) // little endian
   b.write_byte(MSG_METHOD_RETURN) // type = 2
-  b.write_byte(0)                // flags
-  b.write_byte(1)                // version
+  b.write_byte(0) // flags
+  b.write_byte(1) // version
   put_u32(b, body.length())
   put_u32(b, serial)
   // header fields
@@ -372,6 +394,8 @@ pub fn read_le_u32_at(data : Bytes, off : Int) -> Int {
 }
 
 // —— 信号（SIGNAL, type=4）——
+
+///|
 const MSG_SIGNAL : Byte = 4
 
 ///|
@@ -387,10 +411,10 @@ pub fn build_signal(
   serial : Int,
 ) -> Bytes {
   let b = Buffer::Buffer()
-  b.write_byte(0x6C)        // little endian
-  b.write_byte(MSG_SIGNAL)  // type = 4
-  b.write_byte(0)           // flags
-  b.write_byte(1)           // version
+  b.write_byte(0x6C) // little endian
+  b.write_byte(MSG_SIGNAL) // type = 4
+  b.write_byte(0) // flags
+  b.write_byte(1) // version
   put_u32(b, body.length())
   put_u32(b, serial)
   let hf = Buffer::Buffer()

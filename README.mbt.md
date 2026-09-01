@@ -60,13 +60,8 @@ test "build and parse a method call" {
   // 构造一条方法调用消息
   let body = @dbus.build_variant_string("hello")
   let msg = @dbus.build_method_call(
-    "com.example.Service",
-    "/com/example/Object",
-    "com.example.Interface",
-    "Ping",
-    body,
-    "v",
-    1,
+    "com.example.Service", "/com/example/Object", "com.example.Interface", "Ping",
+    body, "v", 1,
   )
   assert_true(msg.length() > 0)
 
@@ -96,15 +91,15 @@ fn main {
     Ok(conn) => {
       match @dbus.hello(conn) {
         Err(e) => println("hello failed: \{e}")
-        Ok(name) => println("our unique name: \{name}")   // e.g. ":1.448"
+        Ok(name) => println("our unique name: \{name}") // e.g. ":1.448"
       }
 
       // Ask the bus who owns a well-known name
-      match @dbus.call_with_string(
-        conn, "org.freedesktop.DBus", "/org/freedesktop/DBus",
-        "org.freedesktop.DBus", "GetNameOwner",
-        "org.kde.StatusNotifierWatcher", 2,
-      ) {
+      match
+        @dbus.call_with_string(
+          conn, "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+          "GetNameOwner", "org.kde.StatusNotifierWatcher", 2,
+        ) {
         Err(e) => println("call failed: \{e}")
         Ok(m) =>
           match @dbus.read_dbus_string(m.body, 0) {
@@ -223,7 +218,7 @@ fn dispatch_ping(iface : String, member : String) -> @dbus.Reply? {
   if iface == "com.example" && member == "Ping" {
     Some(@dbus.Reply::make(@dbus.build_variant_string("pong"), "v"))
   } else {
-    None   // unknown method: no reply
+    None // unknown method: no reply
   }
 }
 ```

@@ -4,3 +4,5 @@ target/
 target
 .mooncakes/
 .moonagent/
+/pkg.generated.mbti
+examples/doc/pkg.generated.mbti

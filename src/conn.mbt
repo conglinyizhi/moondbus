@@ -7,11 +7,19 @@
 // —— 底层 FFI（C stub）——
 #borrow(path)
 extern "c" fn connect_unix(path : Bytes) -> Int = "moonbit_dbus_unix_connect"
+
+///|
 extern "c" fn close_fd(fd : Int) -> Int = "moonbit_dbus_close"
+
+///|
 #borrow(buf)
 extern "c" fn fd_read(fd : Int, buf : Bytes, len : Int) -> Int = "moonbit_dbus_read"
+
+///|
 #borrow(buf)
 extern "c" fn fd_write(fd : Int, buf : Bytes, len : Int) -> Int = "moonbit_dbus_write"
+
+///|
 extern "c" fn getuid() -> Int = "moonbit_dbus_getuid"
 
 ///|
@@ -37,11 +45,11 @@ pub fn connect_bus() -> Result[Connection, Int] {
   // SASL EXTERNAL 认证
   let uid = getuid()
   let out = Buffer::Buffer()
-  out.write_byte(0)                       // \0 NUL 首字节
+  out.write_byte(0) // \0 NUL 首字节
   write_ascii(out, "AUTH EXTERNAL ")
   write_uid_hex(out, uid)
-  out.write_byte(13)                      // \r
-  out.write_byte(10)                      // \n
+  out.write_byte(13) // \r
+  out.write_byte(10) // \n
   let auth_bytes = out.to_bytes()
   let _ = fd_write(fd, auth_bytes, auth_bytes.length())
 
@@ -63,7 +71,7 @@ pub fn connect_bus() -> Result[Connection, Int] {
   write_ascii(begin, "BEGIN\r\n")
   let begin_bytes = begin.to_bytes()
   let _ = fd_write(fd, begin_bytes, begin_bytes.length())
-  Ok({ fd })
+  Ok({ fd, })
 }
 
 ///|
@@ -107,7 +115,7 @@ pub fn recv_message(conn : Connection) -> Result[Bytes, Int] {
     return Err(if n1 == 0 { 0 } else { -n1 })
   }
   if n1 < 16 {
-    return Err(-100)  // 头不完整
+    return Err(-100) // 头不完整
   }
   // 2) 算出总长：16 + fields_len(对齐到8) + body_len
   let body_len = le_u32(head, 4)
@@ -192,6 +200,7 @@ fn hex_digit_byte(v : Int) -> Byte {
   }
 }
 
+///|
 fn write_byte(out : Buffer, b : Byte) -> Unit {
   out.write_byte(b)
 }
@@ -202,4 +211,5 @@ pub fn getpid() -> Int {
   getpid_ffi()
 }
 
+///|
 extern "c" fn getpid_ffi() -> Int = "moonbit_dbus_getpid"

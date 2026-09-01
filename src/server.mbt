@@ -38,7 +38,7 @@ pub(all) struct Reply {
 ///|
 /// 构造一个回复。
 pub fn Reply::make(body : Bytes, signature : String) -> Reply {
-  { body, signature }
+  { body, signature, }
 }
 
 ///|
@@ -53,7 +53,7 @@ pub struct Server {
 pub fn Server::connect() -> Result[Server, Int] {
   match connect_bus() {
     Err(e) => Err(e)
-    Ok(conn) => Ok({ conn, serial: 100 })
+    Ok(conn) => Ok({ conn, serial: 100, })
   }
 }
 
@@ -84,7 +84,15 @@ pub fn Server::call_with_string(
   arg : String,
   flags : Int,
 ) -> Result[Message, Int] {
-  call_with_string(self.conn, destination, path, iface, member, arg, self.serial)
+  call_with_string(
+    self.conn,
+    destination,
+    path,
+    iface,
+    member,
+    arg,
+    self.serial,
+  )
 }
 
 ///|
@@ -97,7 +105,15 @@ pub fn Server::emit_signal(
   body : Bytes,
   signature : String,
 ) -> Result[Int, Int] {
-  let r = emit_signal(self.conn, path, iface, name, body, signature, self.serial)
+  let r = emit_signal(
+    self.conn,
+    path,
+    iface,
+    name,
+    body,
+    signature,
+    self.serial,
+  )
   self.serial = self.serial + 1
   r
 }
@@ -112,7 +128,7 @@ pub fn Server::emit_signal(
 /// 循环直到连接关闭。
 pub fn Server::serve(
   self : Server,
-  dispatch : (Server, DispatchCtx) -> Option[Reply],
+  dispatch : (Server, DispatchCtx) -> Reply?,
 ) -> Unit {
   let mut running = true
   while running {
@@ -126,9 +142,7 @@ pub fn Server::serve(
               let fields = parse_header_fields(raw)
               let ctx = DispatchCtx::of(m, fields)
               match dispatch(self, ctx) {
-                Some(reply) => {
-                  self.reply(ctx, reply)
-                }
+                Some(reply) => self.reply(ctx, reply)
                 None => ()
               }
             }
@@ -141,13 +155,18 @@ pub fn Server::serve(
 /// 给调用方回一条 METHOD_RETURN。
 fn Server::reply(self : Server, ctx : DispatchCtx, reply : Reply) -> Unit {
   let dest = ctx.sender
-  let body_text =
-    if reply.signature == "" {
-      Bytes::makei(0, fn(_) { 0 })
-    } else {
-      reply.body
-    }
-  let msg = build_method_return(dest, ctx.reply_serial, body_text, reply.signature, self.serial)
+  let body_text = if reply.signature == "" {
+    Bytes::makei(0, fn(_) { 0 })
+  } else {
+    reply.body
+  }
+  let msg = build_method_return(
+    dest,
+    ctx.reply_serial,
+    body_text,
+    reply.signature,
+    self.serial,
+  )
   let _ = send_raw(self.conn, msg)
   self.serial = self.serial + 1
 }
@@ -167,5 +186,5 @@ fn DispatchCtx::of(m : Message, fields : HeaderFields) -> DispatchCtx {
     Some(s) => s
     None => ""
   }
-  { iface, member, sender, reply_serial: m.serial, body: m.body }
+  { iface, member, sender, reply_serial: m.serial, body: m.body, }
 }

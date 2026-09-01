@@ -84,11 +84,13 @@ pub fn Encoder::raw(Self, Bytes) -> Unit
 pub fn Encoder::signature(Self, String) -> Unit
 pub fn Encoder::string(Self, String) -> Unit
 pub fn Encoder::struct_with(Self, (Self) -> Unit) -> Unit
+pub fn Encoder::struct_with_align(Self, Int, (Self) -> Unit) -> Unit
 pub fn Encoder::u32(Self, Int) -> Unit
 pub fn Encoder::variant_bool(Self, Bool) -> Unit
 pub fn Encoder::variant_i32(Self, Int) -> Unit
 pub fn Encoder::variant_object_path(Self, String) -> Unit
 pub fn Encoder::variant_string(Self, String) -> Unit
+pub fn Encoder::variant_with(Self, String, (Self) -> Unit) -> Unit
 
 pub struct HeaderFields {
   path : String?

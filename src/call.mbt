@@ -96,10 +96,11 @@ pub fn call_with_string(
 /// 执行 DBus 握手 Hello（连接后必须首先调用）。
 /// 返回我们的唯一连接名（如 ":1.448"）。
 pub fn hello(conn : Connection) -> Result[String, Int] {
-  match call_simple(
-    conn, "org.freedesktop.DBus", "/org/freedesktop/DBus",
-    "org.freedesktop.DBus", "Hello", 1,
-  ) {
+  match
+    call_simple(
+      conn, "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+      "Hello", 1,
+    ) {
     Err(e) => Err(e)
     Ok(m) =>
       match read_dbus_string(m.body, 0) {
@@ -129,18 +130,24 @@ pub fn request_name(
     b.write_byte(0)
   }
   put_le_u32(b, flags)
-  match call(
-    conn, "org.freedesktop.DBus", "/org/freedesktop/DBus",
-    "org.freedesktop.DBus", "RequestName", b.to_bytes(), "su", serial,
-  ) {
+  match
+    call(
+      conn,
+      "org.freedesktop.DBus",
+      "/org/freedesktop/DBus",
+      "org.freedesktop.DBus",
+      "RequestName",
+      b.to_bytes(),
+      "su",
+      serial,
+    ) {
     Err(e) => Err(e)
-    Ok(m) => {
+    Ok(m) =>
       if m.body.length() >= 4 {
         Ok(read_le_u32(m.body, 0))
       } else {
         Err(-3)
       }
-    }
   }
 }
 

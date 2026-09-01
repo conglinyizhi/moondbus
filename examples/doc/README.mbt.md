@@ -9,13 +9,8 @@
 test "build a method call message" {
   let body = @dbus.build_variant_string("hello")
   let msg = @dbus.build_method_call(
-    "com.example.Service",
-    "/com/example/Object",
-    "com.example.Interface",
-    "Ping",
-    body,
-    "v",
-    1,
+    "com.example.Service", "/com/example/Object", "com.example.Interface", "Ping",
+    body, "v", 1,
   )
   assert_true(msg.length() > 0)
 }
@@ -76,13 +71,8 @@ test "parse header fields" {
   // 用 build_method_call 造一条消息，再解析它的 header 字段
   let body = @dbus.build_variant_string("x")
   let msg = @dbus.build_method_call(
-    "com.example.Service",
-    "/com/example/Object",
-    "com.example.Interface",
-    "Ping",
-    body,
-    "v",
-    1,
+    "com.example.Service", "/com/example/Object", "com.example.Interface", "Ping",
+    body, "v", 1,
   )
   let fields = @dbus.parse_header_fields(msg)
   match fields.interface {

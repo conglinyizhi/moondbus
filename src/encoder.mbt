@@ -10,20 +10,20 @@
 /// （`build_method_return` / `build_signal` 已保证这一点）。
 pub struct Encoder {
   buf : Buffer
-  base : Int   // 这段数据在整条消息中的起始偏移（用于正确对齐）
+  base : Int // 这段数据在整条消息中的起始偏移（用于正确对齐）
 }
 
 ///|
 /// 新建一个编码器。
 pub fn Encoder::new() -> Encoder {
-  { buf: Buffer::Buffer(), base: 0 }
+  { buf: Buffer::Buffer(), base: 0, }
 }
 
 ///|
 /// 新建一个编码器，声明它在整条消息中的起始偏移。
 /// 编码嵌套结构（数组元素等）时必须用它，否则对齐会错位。
 pub fn Encoder::new_at(base : Int) -> Encoder {
-  { buf: Buffer::Buffer(), base }
+  { buf: Buffer::Buffer(), base, }
 }
 
 ///|
@@ -121,6 +121,19 @@ pub fn Encoder::variant_i32(self : Encoder, v : Int) -> Unit {
 }
 
 ///|
+/// 写一个持有任意类型的 variant（v）。
+/// `signature` 是持有的类型签名，`f` 用当前 Encoder 写那个类型的值。
+/// 用于无法用预置 variant_xxx 覆盖的类型（如 `a(iiibay)`、自定义 struct）。
+pub fn Encoder::variant_with(
+  self : Encoder,
+  signature : String,
+  f : (Encoder) -> Unit,
+) -> Unit {
+  self.signature(signature)
+  f(self)
+}
+
+///|
 /// 取出编码结果。
 pub fn Encoder::finish(self : Encoder) -> Bytes {
   self.buf.to_bytes()
@@ -132,7 +145,11 @@ pub fn Encoder::finish(self : Encoder) -> Bytes {
 /// `elem_align` 是数组**元素**的对齐要求（如 dict entry 与 struct 是 8，
 /// 字符串是 4）。DBus 规定长度前缀之后要先对齐到元素边界，
 /// 且该填充**不计入**长度。
-pub fn Encoder::array(self : Encoder, elem_align : Int, content : Bytes) -> Unit {
+pub fn Encoder::array(
+  self : Encoder,
+  elem_align : Int,
+  content : Bytes,
+) -> Unit {
   self.u32(content.length())
   self.align(elem_align)
   self.buf.write_bytes(content)
@@ -168,8 +185,25 @@ pub fn Encoder::array_with(
 
 ///|
 /// 编码一个 struct（8 字节对齐），内容由回调写入。
+///|
+/// 把一段已编码的数据以 struct 形式写入，按 8 字节对齐。
 pub fn Encoder::struct_with(self : Encoder, f : (Encoder) -> Unit) -> Unit {
   self.align(8)
+  let inner = Encoder::new_at(self.pos())
+  f(inner)
+  self.buf.write_bytes(inner.finish())
+}
+
+///|
+/// 以指定对齐写一个 struct（D-Bus 里 struct 对齐 = 成员最大对齐）。
+/// 默认 struct_with 用 8；当成员只有 int32 等对齐 4 的类型（如 `(iiibay)`）
+/// 时请用这个方法 + 4，避免多 pad 字节导致布局错位。
+pub fn Encoder::struct_with_align(
+  self : Encoder,
+  align : Int,
+  f : (Encoder) -> Unit,
+) -> Unit {
+  self.align(align)
   let inner = Encoder::new_at(self.pos())
   f(inner)
   self.buf.write_bytes(inner.finish())

@@ -8,7 +8,7 @@ repository = "https://github.com/conglinyizhi/moondbus"
 
 license = "Apache-2.0"
 
-keywords = ["dbus", "ipc", "linux", "desktop", "protocol"]
+keywords = [ "dbus", "ipc", "linux", "desktop", "protocol" ]
 
 description = "Pure MoonBit D-Bus protocol implementation — connect, authenticate, call methods, and export objects on the session bus. Only ~40 lines of C for the unix socket."
 
