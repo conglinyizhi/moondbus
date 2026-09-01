@@ -256,6 +256,22 @@ Contributions welcome.
 Linux only, native backend (`preferred_target = "native"`).
 Requires a C compiler; set `MOON_CC=gcc` if the toolchain cannot find one.
 
+**Tested only on the author's local machine** — an Arch-based Linux system with
+the session bus over a unix socket. This is a single-environment verification:
+
+- The session-bus unix-socket path (`/run/user/<uid>/bus`) works on the dev
+  machine.
+- **Not** tested against the system bus, a different session bus address, or
+  a differently-configured `dbus-daemon`.
+- **Not** tested on other platforms: no Windows (D-Bus uses TCP loopback there,
+  not unix sockets) or macOS testing has been done.
+- The wire codec is exercised by unit tests (alignment / round-trips / robust
+  parsing) but **not** validated against a third-party D-Bus implementation's
+  byte-for-byte output.
+
+If you use this against a different bus setup and hit a problem, it would be
+valuable to report it.
+
 ## License
 
 Apache-2.0
