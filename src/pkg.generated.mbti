@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "clyzhi/moondbus/src"
+package "conglinyizhi/moondbus/src"
 
 import {
   "moonbitlang/core/buffer",

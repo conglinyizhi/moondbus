@@ -32,7 +32,7 @@ moondbus/
 ├── examples/doc/         # 可编译示例集（mbt check）
 ```
 
-子包 import 路径：`clyzhi/moondbus/src`（别名 `@dbus`）。
+子包 import 路径：`conglinyizhi/moondbus/src`（别名 `@dbus`）。
 
 ## Wire protocol details (坑，必读)
 

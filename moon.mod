@@ -1,4 +1,4 @@
-name = "clyzhi/moondbus"
+name = "conglinyizhi/moondbus"
 
 version = "0.1.0"
 

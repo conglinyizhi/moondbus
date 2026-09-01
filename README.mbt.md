@@ -38,14 +38,14 @@ This package implements the protocol itself, so you get:
 ## Install
 
 ```
-moon add clyzhi/moondbus
+moon add conglinyizhi/moondbus
 ```
 
 Add to your `moon.pkg`:
 
 ```
 import {
-  "clyzhi/moondbus/src" @dbus,
+  "conglinyizhi/moondbus/src" @dbus,
 }
 supported_targets = "+native"
 ```

@@ -185,6 +185,7 @@ pub fn Encoder::array_with(
 
 ///|
 /// 编码一个 struct（8 字节对齐），内容由回调写入。
+
 ///|
 /// 把一段已编码的数据以 struct 形式写入，按 8 字节对齐。
 pub fn Encoder::struct_with(self : Encoder, f : (Encoder) -> Unit) -> Unit {
