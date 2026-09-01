@@ -21,8 +21,11 @@ This package implements the protocol itself, so you get:
 - **Message codec** — little-endian header/body encoding with correct alignment
   (including the `g` signature type's single-byte length and 8-byte struct alignment)
 - **Client side** — `Hello`, `RequestName`, arbitrary method calls
-- **Server side** — parse incoming `METHOD_CALL`, build `METHOD_RETURN` replies,
-  encode `variant` and `a{sv}` dictionaries
+- **Server side** — `Server` abstraction with a reusable `serve()` loop: connect,
+  register a name, receive `METHOD_CALL`s, dispatch to your handler, and reply
+  automatically. The `moonsni` tray runs on this loop.
+- **Server primitives** — `parse_header_fields`, `build_method_return`, encode
+  `variant` and `a{sv}` dictionaries
 - **Signals** — emit `SIGNAL` messages
 - **Value encoder** — offset-aware `Encoder` for building nested types
   (`a{sv}`, `(ia{sv}av)`, variants, object paths) with correct alignment
@@ -155,20 +158,29 @@ let body = e.finish()
 
 ## Implementing a D-Bus service
 
-`parse_header_fields` plus `build_method_return` are enough to answer incoming
-calls. The important detail: **a reply must set `destination` to the requester's
-`sender`**, otherwise the bus cannot route it back.
+The high-level way is the `Server` abstraction, which owns the connect / name
+registration / receive / reply loop and just calls your handler for each
+`METHOD_CALL`:
 
 ```
-let fields = @dbus.parse_header_fields(raw)
-let sender = match fields.sender { Some(s) => s; None => "" }
-let value = @dbus.build_variant_string("hello")
-let reply = @dbus.build_method_return(sender, req.serial, value, "v", my_serial)
-let _ = @dbus.send_raw(conn, reply)
+let s = @dbus.Server::connect().unwrap()
+s.hello().unwrap()
+s.request_name("com.example.MyService", 0).unwrap()
+s.serve(fn(_server, ctx) {
+  if ctx.iface == "com.example" && ctx.member == "Ping" {
+    Some(@dbus.Reply::make(@dbus.build_variant_string("pong"), "v"))
+  } else {
+    None   // unknown method: no reply
+  }
+})
 ```
 
-See [moonsni](https://github.com/conglinyizhi/moonsni) for a complete
-service implementation (a KDE system tray icon).
+If you prefer the raw primitives, `parse_header_fields` plus `build_method_return`
+are enough. The important detail: **a reply must set `destination` to the
+requester's `sender`**, otherwise the bus cannot route it back.
+
+See [moonsni](https://github.com/conglinyizhi/moonsni) for a complete service
+implementation (a KDE system tray icon).
 
 ## Status & limitations
 

@@ -57,6 +57,14 @@ pub struct Connection {
   fd : Int
 }
 
+pub struct DispatchCtx {
+  iface : String
+  member : String
+  sender : String
+  reply_serial : Int
+  body : Bytes
+}
+
 pub struct Encoder {
   buf : @buffer.Buffer
   base : Int
@@ -98,6 +106,23 @@ pub struct Message {
   body : Bytes
   reply_serial : Int?
 }
+
+pub(all) struct Reply {
+  body : Bytes
+  signature : String
+}
+pub fn Reply::make(Bytes, String) -> Self
+
+pub struct Server {
+  conn : Connection
+  mut serial : Int
+}
+pub fn Server::call_with_string(Self, String, String, String, String, String, Int) -> Result[Message, Int]
+pub fn Server::connect() -> Result[Self, Int]
+pub fn Server::emit_signal(Self, String, String, String, Bytes, String) -> Result[Int, Int]
+pub fn Server::hello(Self) -> Result[String, Int]
+pub fn Server::request_name(Self, String, Int) -> Result[Int, Int]
+pub fn Server::serve(Self, (Self, DispatchCtx) -> Reply?) -> Unit
 
 // Type aliases
 
