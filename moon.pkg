@@ -1,0 +1,4 @@
+import {
+  "clyzhi/moondbus/src" @dbus,
+}
+supported_targets = "+native"
