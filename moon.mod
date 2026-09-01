@@ -1,0 +1,15 @@
+name = "clyzhi/moonbit-dbus"
+
+version = "0.1.0"
+
+readme = "README.md"
+
+repository = "https://github.com/conglinyizhi/moonbit-dbus"
+
+license = "Apache-2.0"
+
+keywords = ["dbus", "ipc", "linux", "desktop", "protocol"]
+
+description = "Pure MoonBit D-Bus protocol implementation — connect, authenticate, call methods, and export objects on the session bus. Only ~40 lines of C for the unix socket."
+
+preferred_target = "native"
