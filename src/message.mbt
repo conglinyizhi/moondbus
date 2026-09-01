@@ -1,5 +1,5 @@
 ///|
-/// moonbit-kde-sni：DBus 消息层 —— 消息 wire 编解码（方法调用 / 回复）。
+/// moondbus：DBus 消息层 —— 消息 wire 编解码（方法调用 / 回复）。
 /// 遵循 DBus 协议（小端，仅实现所需类型：y u s o g v a）。
 ///
 /// 最小实现：构造/解析 METHOD_CALL 与 METHOD_RETURN，支持 Hello 调用。

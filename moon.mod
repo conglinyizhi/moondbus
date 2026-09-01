@@ -1,10 +1,10 @@
-name = "clyzhi/moonbit-dbus"
+name = "clyzhi/moondbus"
 
 version = "0.1.0"
 
 readme = "README.md"
 
-repository = "https://github.com/conglinyizhi/moonbit-dbus"
+repository = "https://github.com/conglinyizhi/moondbus"
 
 license = "Apache-2.0"
 

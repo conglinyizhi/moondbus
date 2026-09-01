@@ -1,5 +1,5 @@
 ///|
-/// moonbit-kde-sni：DBus 客户端底层 —— 连接 + 认证。
+/// moondbus：DBus 客户端底层 —— 连接 + 认证。
 /// 纯 MoonBit DBus 协议层（仅最底层 unix socket 依赖 C stub）。
 ///
 /// 提供连接 session bus 并完成 SASL EXTERNAL 认证的能力。

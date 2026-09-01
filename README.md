@@ -1,4 +1,4 @@
-# moonbit-dbus
+# moondbus
 
 Pure MoonBit implementation of the **D-Bus** protocol for Linux desktops.
 
@@ -31,14 +31,14 @@ This package implements the protocol itself, so you get:
 ## Install
 
 ```
-moon add clyzhi/moonbit-dbus
+moon add clyzhi/moondbus
 ```
 
 Add to your `moon.pkg`:
 
 ```
 import {
-  "clyzhi/moonbit-dbus/src" @dbus,
+  "clyzhi/moondbus/src" @dbus,
 }
 supported_targets = "+native"
 ```
@@ -167,7 +167,7 @@ let reply = @dbus.build_method_return(sender, req.serial, value, "v", my_serial)
 let _ = @dbus.send_raw(conn, reply)
 ```
 
-See [moonbit-sni](https://github.com/conglinyizhi/moonbit-sni) for a complete
+See [moonsni](https://github.com/conglinyizhi/moonsni) for a complete
 service implementation (a KDE system tray icon).
 
 ## Status & limitations
@@ -179,7 +179,7 @@ Works today:
 - Replies with `v`, `a{sv}`, and arbitrary nested types via `Encoder`
 - Emitting signals
 - Object export — verified against the StatusNotifierItem and
-  com.canonical.dbusmenu specs (see [moonbit-sni](https://github.com/conglinyizhi/moonbit-sni))
+  com.canonical.dbusmenu specs (see [moonsni](https://github.com/conglinyizhi/moonsni))
 
 Not implemented yet:
 

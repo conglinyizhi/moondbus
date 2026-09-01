@@ -1,5 +1,5 @@
 ///|
-/// moonbit-kde-sni：DBus 高层调用 API。
+/// moondbus：DBus 高层调用 API。
 /// 封装「构造消息 → 发送 → 接收 → 解析」，供上层（SNI 托盘等）直接使用。
 
 ///|
