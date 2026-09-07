@@ -243,7 +243,7 @@ Works today:
 
 Not implemented yet:
 
-- System bus address parsing (the session bus path is currently fixed)
+- System bus address transports other than filesystem Unix sockets
 - Receiving / matching signals (`AddMatch`)
 - Decoding arbitrary types (only strings and u32 are decoded today)
 - 64-bit integers, doubles, file descriptors
@@ -259,10 +259,11 @@ Requires a C compiler; set `MOON_CC=gcc` if the toolchain cannot find one.
 **Tested only on the author's local machine** — an Arch-based Linux system with
 the session bus over a unix socket. This is a single-environment verification:
 
-- The session-bus unix-socket path (`/run/user/<uid>/bus`) works on the dev
-  machine.
-- **Not** tested against the system bus, a different session bus address, or
-  a differently-configured `dbus-daemon`.
+- The session bus address is read from `DBUS_SESSION_BUS_ADDRESS` when set;
+  otherwise the library falls back to `/run/user/<current uid>/bus`.
+- Filesystem Unix socket addresses and percent-encoded paths are supported.
+- **Not** tested against the system bus, abstract Unix sockets, a different
+  session bus address, or a differently-configured `dbus-daemon`.
 - **Not** tested on other platforms: no Windows (D-Bus uses TCP loopback there,
   not unix sockets) or macOS testing has been done.
 - The wire codec is exercised by unit tests (alignment / round-trips / robust

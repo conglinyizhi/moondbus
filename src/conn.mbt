@@ -43,14 +43,13 @@ pub struct Connection {
 }
 
 ///|
-/// DBus 常量。
-const DBUS_SESSION_BUS : String = "unix:path=/run/user/1000/bus"
-
-///|
 /// 连接并认证到 DBus session bus。
 /// 成功返回 Connection，失败返回 Err(errno)。
 pub fn connect_bus() -> Result[Connection, Int] {
-  let bus_path = dbus_path_from_address(DBUS_SESSION_BUS)
+  let bus_path = match session_bus_path() {
+    Some(path) => path
+    None => return Err(2) // ENOENT: no usable session bus address
+  }
   let path = @utf8.encode(bus_path)
   let fd = connect_unix(path)
   if fd < 0 {
@@ -172,10 +171,78 @@ fn le_u32(data : Bytes, off : Int) -> Int {
 }
 
 ///|
-/// 从 DBus 地址解析出 unix socket 路径。
-/// 当前固定为 session bus 路径（DBUS_SESSION_BUS 不再解析，直接用常量）。
-fn dbus_path_from_address(_addr : String) -> String {
-  "/run/user/1000/bus"
+/// 从当前环境解析出 session bus 的 Unix socket 路径。
+///
+/// D-Bus 地址可能包含多个候选地址和地址参数；这里选第一个
+/// `unix:path=...` 地址。当前底层只支持 filesystem Unix sockets，
+/// 因此其它地址形式会被跳过。
+fn session_bus_path() -> String? {
+  match @env.get_env_var("DBUS_SESSION_BUS_ADDRESS") {
+    Some(address) => dbus_path_from_address(address)
+    None => Some("/run/user/\{getuid()}/bus")
+  }
+}
+
+///|
+/// 从 D-Bus 地址解析出 Unix socket 路径。
+///
+/// 只返回第一个可用的 `unix:path=...` 地址。地址值支持 D-Bus 常见的
+/// percent encoding（例如 `%2F` 表示 `/`）。
+fn dbus_path_from_address(addr : String) -> String? {
+  for candidate in addr.split(";") {
+    let candidate = candidate.to_owned()
+    if !candidate.has_prefix("unix:") {
+      continue
+    }
+    for option in candidate[5:].split(",") {
+      let option = option.to_owned()
+      if option.has_prefix("path=") {
+        let path = percent_decode(option[5:])
+        if path != "" {
+          return Some(path)
+        }
+      }
+    }
+  }
+  None
+}
+
+///|
+/// 解码 D-Bus 地址参数中的 `%HH` percent encoding。
+/// 无效编码原样保留，避免把合法但未知的地址内容静默改坏。
+fn percent_decode(value : StringView) -> String {
+  let out = Buffer::Buffer()
+  let bytes = @utf8.encode(value)
+  let mut i = 0
+  while i < bytes.length() {
+    if bytes[i] == b'%' && i + 2 < bytes.length() {
+      match (hex_value(bytes[i + 1]), hex_value(bytes[i + 2])) {
+        (Some(high), Some(low)) => {
+          out.write_byte((high * 16 + low).to_byte())
+          i = i + 3
+          continue
+        }
+        (_, _) => ()
+      }
+    }
+    out.write_byte(bytes[i])
+    i = i + 1
+  }
+  @utf8.decode_lossy(out.to_bytes())
+}
+
+///|
+fn hex_value(b : Byte) -> Int? {
+  let value = b.to_int()
+  if value >= 48 && value <= 57 {
+    Some(value - 48)
+  } else if value >= 65 && value <= 70 {
+    Some(value - 55)
+  } else if value >= 97 && value <= 102 {
+    Some(value - 87)
+  } else {
+    None
+  }
 }
 
 ///|
