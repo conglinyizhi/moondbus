@@ -98,6 +98,7 @@ pub fn Server::call_with_string(
   arg : String,
   flags : Int,
 ) -> Result[Message, Int] {
+  ignore(flags)
   call_with_string(
     self.conn,
     destination,
