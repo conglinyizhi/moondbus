@@ -164,6 +164,9 @@ pub fn Encoder::array(
   elem_align : Int32,
   content : Bytes,
 ) -> Unit {
+  // 长度前缀是 u32，写之前必须先对齐到 4；
+  // 否则从非对齐位置开始的数组会被接收方读成畸形消息。
+  self.align(4)
   self.u32(content.length())
   self.align(elem_align)
   self.buf.write_bytes(content)
@@ -181,10 +184,8 @@ pub fn Encoder::array_with(
 ) -> Unit {
   // 推算数组内容的起始绝对偏移：
   //   当前位置 -> 对齐到 4（长度前缀） -> +4 -> 对齐到元素边界
+  self.align(4)
   let mut pos = self.pos()
-  while pos % 4 != 0 {
-    pos = pos + 1
-  }
   pos = pos + 4
   while pos % elem_align != 0 {
     pos = pos + 1
