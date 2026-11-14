@@ -18,7 +18,12 @@ extern "c" fn read_fd(fd : Int32, buf : Bytes, len : Int32) -> Int32 = "moonbit_
 
 ///|
 #borrow(buf)
-extern "c" fn write_fd(fd : Int32, buf : Bytes, len : Int32) -> Int32 = "moonbit_probe_write"
+extern "c" fn write_fd_at(
+  fd : Int32,
+  buf : Bytes,
+  off : Int32,
+  len : Int32,
+) -> Int32 = "moonbit_probe_write_at"
 
 ///|
 extern "c" fn close_fd(fd : Int32) -> Int32 = "moonbit_probe_close"
@@ -82,7 +87,8 @@ fn forward(peer : Int32, bytes : Array[Byte]) -> Unit {
   let buf = Bytes::from_array(bytes)
   let mut off = 0
   while off < bytes.length() {
-    let n = write_fd(peer, buf, bytes.length())
+    // 从已写位置继续，不能每次从头写：部分写会重复字节
+    let n = write_fd_at(peer, buf, off, bytes.length() - off)
     if n <= 0 {
       eprintln("转发失败: \{n}")
       return

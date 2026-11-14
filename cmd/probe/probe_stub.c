@@ -97,3 +97,11 @@ int32_t moonbit_probe_append(const char *path, const char *data, int32_t len) {
   if (n < 0) return (int32_t)-e;
   return (int32_t)n;
 }
+
+/* 带偏移写：部分写之后从已写位置继续，避免重复字节。 */
+MOONBIT_FFI_EXPORT
+int32_t moonbit_probe_write_at(int32_t fd, const char *buf, int32_t off, int32_t len) {
+  ssize_t n = write(fd, buf + off, (size_t)len);
+  if (n < 0) return (int32_t)-errno;
+  return (int32_t)n;
+}
