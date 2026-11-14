@@ -121,15 +121,14 @@ pub fn recv_raw(conn : Connection, len : Int32) -> Result[Bytes, Int32] {
 /// DBus 是流式协议，一次 read 可能含多条消息或不完整。
 /// 此函数先读 16 字节固定头，算出总长，再读剩余部分。
 pub fn recv_message(conn : Connection) -> Result[Bytes, Int32] {
-  // 1) 读 16 字节固定头
-  let head : Bytes = Bytes::makei(16, fn(_) { 0 })
-  let n1 = fd_read(conn.fd, head, 16)
-  if n1 <= 0 {
-    return Err(if n1 == 0 { 0 } else { -n1 })
+  // 1) 读 16 字节固定头。短读要继续读：一次 read 不保证读满，
+  //    早先版本短读直接报错，会把常驻服务循环直接结束掉。
+  let head_buf = Buffer::Buffer()
+  match read_exact_into(conn, head_buf, 16) {
+    Err(e) => return Err(e)
+    Ok(_) => ()
   }
-  if n1 < 16 {
-    return Err(-100) // 头不完整
-  }
+  let head = head_buf.to_bytes()
   // 2) 算出总长：16 + fields_len(对齐到8) + body_len
   let body_len = le_u32(head, 4)
   let fields_len = le_u32(head, 12)
@@ -141,21 +140,40 @@ pub fn recv_message(conn : Connection) -> Result[Bytes, Int32] {
   if total_rest <= 0 {
     return Ok(head)
   }
-  // 3) 读剩余
-  let tail : Bytes = Bytes::makei(total_rest, fn(_) { 0 })
-  let mut got = 0
-  while got < total_rest {
-    let n2 = fd_read(conn.fd, tail, total_rest - got)
-    if n2 <= 0 {
-      break
-    }
-    got = got + n2
+  // 3) 读剩余，同样读满为止
+  let body_buf = Buffer::Buffer()
+  match read_exact_into(conn, body_buf, total_rest) {
+    Err(e) => return Err(e)
+    Ok(_) => ()
   }
   // 4) 拼接
   let out = Buffer::Buffer()
   out.write_bytes(head)
-  out.write_bytes(tail[:got])
+  out.write_bytes(body_buf.to_bytes())
   Ok(out.to_bytes())
+}
+
+///|
+/// 从连接读满 need 字节追加到 buf；短读继续读，对端关闭返回 Err(0)。
+fn read_exact_into(
+  conn : Connection,
+  buf : Buffer,
+  need : Int32,
+) -> Result[Unit, Int32] {
+  let mut got = 0
+  while got < need {
+    let tmp : Bytes = Bytes::makei(need - got, fn(_) { 0 })
+    let n = fd_read(conn.fd, tmp, need - got)
+    if n < 0 {
+      return Err(-n)
+    }
+    if n == 0 {
+      return Err(0)
+    }
+    buf.write_bytes(tmp[:n])
+    got = got + n
+  }
+  Ok(())
 }
 
 ///|
