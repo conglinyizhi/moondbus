@@ -24,7 +24,7 @@
 /// （`build_method_return` / `build_signal` 已保证这一点）。
 pub struct Encoder {
   buf : Buffer
-  base : Int // 这段数据在整条消息中的起始偏移（用于正确对齐）
+  base : Int32 // 这段数据在整条消息中的起始偏移（用于正确对齐）
 }
 
 ///|
@@ -36,25 +36,25 @@ pub fn Encoder::new() -> Encoder {
 ///|
 /// 新建一个编码器，声明它在整条消息中的起始偏移。
 /// 编码嵌套结构（数组元素等）时必须用它，否则对齐会错位。
-pub fn Encoder::new_at(base : Int) -> Encoder {
+pub fn Encoder::new_at(base : Int32) -> Encoder {
   { buf: Buffer::Buffer(), base, }
 }
 
 ///|
 /// 当前绝对偏移（消息起点算起）。
-pub fn Encoder::pos(self : Encoder) -> Int {
+pub fn Encoder::pos(self : Encoder) -> Int32 {
   self.base + self.buf.length()
 }
 
 ///|
 /// 当前已写入的字节数（用于计算数组长度）。
-pub fn Encoder::len(self : Encoder) -> Int {
+pub fn Encoder::len(self : Encoder) -> Int32 {
   self.buf.length()
 }
 
 ///|
 /// 补零对齐到 n 字节边界。
-pub fn Encoder::align(self : Encoder, n : Int) -> Unit {
+pub fn Encoder::align(self : Encoder, n : Int32) -> Unit {
   while (self.base + self.buf.length()) % n != 0 {
     self.buf.write_byte(0)
   }
@@ -74,7 +74,7 @@ pub fn Encoder::raw(self : Encoder, b : Bytes) -> Unit {
 
 ///|
 /// 写 uint32（u），自动对齐到 4。
-pub fn Encoder::u32(self : Encoder, v : Int) -> Unit {
+pub fn Encoder::u32(self : Encoder, v : Int32) -> Unit {
   self.align(4)
   let mut i = 0
   while i < 4 {
@@ -85,7 +85,7 @@ pub fn Encoder::u32(self : Encoder, v : Int) -> Unit {
 
 ///|
 /// 写 int32（i），编码同 u32。
-pub fn Encoder::i32(self : Encoder, v : Int) -> Unit {
+pub fn Encoder::i32(self : Encoder, v : Int32) -> Unit {
   self.u32(v)
 }
 
@@ -129,7 +129,7 @@ pub fn Encoder::variant_bool(self : Encoder, v : Bool) -> Unit {
 
 ///|
 /// 写一个持有 int32 的 variant（v）。
-pub fn Encoder::variant_i32(self : Encoder, v : Int) -> Unit {
+pub fn Encoder::variant_i32(self : Encoder, v : Int32) -> Unit {
   self.signature("i")
   self.i32(v)
 }
@@ -161,7 +161,7 @@ pub fn Encoder::finish(self : Encoder) -> Bytes {
 /// 且该填充**不计入**长度。
 pub fn Encoder::array(
   self : Encoder,
-  elem_align : Int,
+  elem_align : Int32,
   content : Bytes,
 ) -> Unit {
   self.u32(content.length())
@@ -176,7 +176,7 @@ pub fn Encoder::array(
 /// 将落在消息的哪个位置，因此内部的对齐都是对的。
 pub fn Encoder::array_with(
   self : Encoder,
-  elem_align : Int,
+  elem_align : Int32,
   f : (Encoder) -> Unit,
 ) -> Unit {
   // 推算数组内容的起始绝对偏移：
@@ -215,7 +215,7 @@ pub fn Encoder::struct_with(self : Encoder, f : (Encoder) -> Unit) -> Unit {
 /// 时请用这个方法 + 4，避免多 pad 字节导致布局错位。
 pub fn Encoder::struct_with_align(
   self : Encoder,
-  align : Int,
+  align : Int32,
   f : (Encoder) -> Unit,
 ) -> Unit {
   self.align(align)

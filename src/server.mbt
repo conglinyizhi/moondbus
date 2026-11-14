@@ -38,7 +38,7 @@ pub struct DispatchCtx {
   iface : String
   member : String
   sender : String
-  reply_serial : Int
+  reply_serial : Int32
   body : Bytes
 }
 
@@ -59,12 +59,12 @@ pub fn Reply::make(body : Bytes, signature : String) -> Reply {
 /// 一个 D-Bus 服务：持有连接与回复序列号。
 pub struct Server {
   conn : Connection
-  mut serial : Int
+  mut serial : Int32
 }
 
 ///|
 /// 连接 session bus 并返回一个 Server。
-pub fn Server::connect() -> Result[Server, Int] {
+pub fn Server::connect() -> Result[Server, Int32] {
   match connect_bus() {
     Err(e) => Err(e)
     Ok(conn) => Ok({ conn, serial: 100, })
@@ -73,7 +73,7 @@ pub fn Server::connect() -> Result[Server, Int] {
 
 ///|
 /// 连接后发 Hello 握手。返回响应的唯一名字（bus name）。
-pub fn Server::hello(self : Server) -> Result[String, Int] {
+pub fn Server::hello(self : Server) -> Result[String, Int32] {
   hello(self.conn)
 }
 
@@ -82,8 +82,8 @@ pub fn Server::hello(self : Server) -> Result[String, Int] {
 pub fn Server::request_name(
   self : Server,
   name : String,
-  flags : Int,
-) -> Result[Int, Int] {
+  flags : Int32,
+) -> Result[Int32, Int32] {
   request_name(self.conn, name, flags, 2)
 }
 
@@ -96,8 +96,8 @@ pub fn Server::call_with_string(
   iface : String,
   member : String,
   arg : String,
-  flags : Int,
-) -> Result[Message, Int] {
+  flags : Int32,
+) -> Result[Message, Int32] {
   ignore(flags)
   call_with_string(
     self.conn,
@@ -119,7 +119,7 @@ pub fn Server::emit_signal(
   name : String,
   body : Bytes,
   signature : String,
-) -> Result[Int, Int] {
+) -> Result[Int32, Int32] {
   let r = emit_signal(
     self.conn,
     path,

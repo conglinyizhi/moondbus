@@ -20,32 +20,32 @@
 
 // —— 底层 FFI（C stub）——
 #borrow(path)
-extern "c" fn connect_unix(path : Bytes) -> Int = "moonbit_dbus_unix_connect"
+extern "c" fn connect_unix(path : Bytes) -> Int32 = "moonbit_dbus_unix_connect"
 
 ///|
-extern "c" fn close_fd(fd : Int) -> Int = "moonbit_dbus_close"
-
-///|
-#borrow(buf)
-extern "c" fn fd_read(fd : Int, buf : Bytes, len : Int) -> Int = "moonbit_dbus_read"
+extern "c" fn close_fd(fd : Int32) -> Int32 = "moonbit_dbus_close"
 
 ///|
 #borrow(buf)
-extern "c" fn fd_write(fd : Int, buf : Bytes, len : Int) -> Int = "moonbit_dbus_write"
+extern "c" fn fd_read(fd : Int32, buf : Bytes, len : Int32) -> Int32 = "moonbit_dbus_read"
 
 ///|
-extern "c" fn getuid() -> Int = "moonbit_dbus_getuid"
+#borrow(buf)
+extern "c" fn fd_write(fd : Int32, buf : Bytes, len : Int32) -> Int32 = "moonbit_dbus_write"
+
+///|
+extern "c" fn getuid() -> Int32 = "moonbit_dbus_getuid"
 
 ///|
 /// 一个已认证的 DBus 连接。fd 是到 session bus 的 fd。
 pub struct Connection {
-  fd : Int
+  fd : Int32
 }
 
 ///|
 /// 连接并认证到 DBus session bus。
 /// 成功返回 Connection，失败返回 Err(errno)。
-pub fn connect_bus() -> Result[Connection, Int] {
+pub fn connect_bus() -> Result[Connection, Int32] {
   let bus_path = match session_bus_path() {
     Some(path) => path
     None => return Err(2) // ENOENT: no usable session bus address
@@ -95,7 +95,7 @@ pub fn close(conn : Connection) -> Unit {
 
 ///|
 /// 发送原始字节到连接。返回写入字节数。
-pub fn send_raw(conn : Connection, data : Bytes) -> Result[Int, Int] {
+pub fn send_raw(conn : Connection, data : Bytes) -> Result[Int32, Int32] {
   let w = fd_write(conn.fd, data, data.length())
   if w < 0 {
     Err(-w)
@@ -106,7 +106,7 @@ pub fn send_raw(conn : Connection, data : Bytes) -> Result[Int, Int] {
 
 ///|
 /// 从连接读原始字节（最多 len）。返回读到的字节数。
-pub fn recv_raw(conn : Connection, len : Int) -> Result[Bytes, Int] {
+pub fn recv_raw(conn : Connection, len : Int32) -> Result[Bytes, Int32] {
   let buf : Bytes = Bytes::makei(len, fn(_) { 0 })
   let n = fd_read(conn.fd, buf, len)
   if n <= 0 {
@@ -120,7 +120,7 @@ pub fn recv_raw(conn : Connection, len : Int) -> Result[Bytes, Int] {
 /// 读一条完整的 DBus 消息（按消息边界）。
 /// DBus 是流式协议，一次 read 可能含多条消息或不完整。
 /// 此函数先读 16 字节固定头，算出总长，再读剩余部分。
-pub fn recv_message(conn : Connection) -> Result[Bytes, Int] {
+pub fn recv_message(conn : Connection) -> Result[Bytes, Int32] {
   // 1) 读 16 字节固定头
   let head : Bytes = Bytes::makei(16, fn(_) { 0 })
   let n1 = fd_read(conn.fd, head, 16)
@@ -160,7 +160,7 @@ pub fn recv_message(conn : Connection) -> Result[Bytes, Int] {
 
 ///|
 /// 读小端 u32。
-fn le_u32(data : Bytes, off : Int) -> Int {
+fn le_u32(data : Bytes, off : Int32) -> Int32 {
   let mut v = 0
   let mut i = 0
   while i < 4 && off + i < data.length() {
@@ -232,7 +232,7 @@ fn percent_decode(value : StringView) -> String {
 }
 
 ///|
-fn hex_value(b : Byte) -> Int? {
+fn hex_value(b : Byte) -> Int32? {
   let value = b.to_int()
   if value >= 48 && value <= 57 {
     Some(value - 48)
@@ -261,7 +261,7 @@ fn write_hex_byte(out : Buffer, b : Byte) -> Unit {
 
 ///|
 /// 写 uid 的 hex 字符串（DBus EXTERNAL 要求 uid 的十进制 ascii 再 hex）。
-fn write_uid_hex(out : Buffer, uid : Int) -> Unit {
+fn write_uid_hex(out : Buffer, uid : Int32) -> Unit {
   let s = uid.to_string()
   let bs = @utf8.encode(s)
   let mut i = 0
@@ -273,7 +273,7 @@ fn write_uid_hex(out : Buffer, uid : Int) -> Unit {
 
 ///|
 /// 单个十六进制数字的 ascii 字节。
-fn hex_digit_byte(v : Int) -> Byte {
+fn hex_digit_byte(v : Int32) -> Byte {
   if v < 10 {
     (48 + v).to_byte()
   } else {
@@ -288,9 +288,9 @@ fn write_byte(out : Buffer, b : Byte) -> Unit {
 
 ///|
 /// 返回当前进程 pid（用于构造 DBus bus name，如 SNI 托盘项）。
-pub fn getpid() -> Int {
+pub fn getpid() -> Int32 {
   getpid_ffi()
 }
 
 ///|
-extern "c" fn getpid_ffi() -> Int = "moonbit_dbus_getpid"
+extern "c" fn getpid_ffi() -> Int32 = "moonbit_dbus_getpid"

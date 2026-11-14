@@ -46,7 +46,7 @@ const FIELD_SIGNATURE : Byte = 8
 
 ///|
 /// 对齐 Buffer 到 n 字节边界。
-fn align_buf(b : Buffer, n : Int) -> Unit {
+fn align_buf(b : Buffer, n : Int32) -> Unit {
   while b.length() % n != 0 {
     b.write_byte(0)
   }
@@ -54,7 +54,7 @@ fn align_buf(b : Buffer, n : Int) -> Unit {
 
 ///|
 /// 写小端 u32。
-fn put_u32(b : Buffer, v : Int) -> Unit {
+fn put_u32(b : Buffer, v : Int32) -> Unit {
   let mut i = 0
   while i < 4 {
     b.write_byte(((v >> (8 * i)) & 0xFF).to_byte())
@@ -106,7 +106,7 @@ pub fn build_method_call(
   member : String,
   body : Bytes,
   signature : String,
-  serial : Int,
+  serial : Int32,
 ) -> Bytes {
   let b = Buffer::Buffer()
   b.write_byte(0x6C) // endianness 'l'
@@ -160,7 +160,7 @@ pub fn parse_message(data : Bytes) -> Message? {
 
 ///|
 /// 从 body 里读一个 DBus 字符串（u32 长度 + 内容）。
-pub fn read_dbus_string(body : Bytes, off : Int) -> String? {
+pub fn read_dbus_string(body : Bytes, off : Int32) -> String? {
   if off + 4 > body.length() {
     return None
   }
@@ -174,7 +174,7 @@ pub fn read_dbus_string(body : Bytes, off : Int) -> String? {
 
 ///|
 /// 读小端 u32。
-fn read_u32(data : Bytes, off : Int) -> Int {
+fn read_u32(data : Bytes, off : Int32) -> Int32 {
   let mut v = 0
   let mut i = 0
   while i < 4 && off + i < data.length() {
@@ -188,9 +188,9 @@ fn read_u32(data : Bytes, off : Int) -> Int {
 /// 解码后的消息。
 pub struct Message {
   msg_type : Byte
-  serial : Int
+  serial : Int32
   body : Bytes
-  reply_serial : Int?
+  reply_serial : Int32?
 }
 
 ///|
@@ -201,7 +201,7 @@ pub struct HeaderFields {
   member : String?
   destination : String?
   sender : String?
-  reply_serial : Int?
+  reply_serial : Int32?
   signature : String?
 }
 
@@ -214,7 +214,7 @@ pub fn parse_header_fields(data : Bytes) -> HeaderFields {
   let mut member : String? = None
   let mut destination : String? = None
   let mut sender : String? = None
-  let mut reply_serial : Int? = None
+  let mut reply_serial : Int32? = None
   let mut signature : String? = None
   if data.length() < 16 {
     return {
@@ -314,7 +314,7 @@ pub fn parse_header_fields(data : Bytes) -> HeaderFields {
 
 ///|
 /// 写一个 u32 类型的 header field（如 REPLY_SERIAL）。
-fn put_field_u32(b : Buffer, code : Byte, value : Int) -> Unit {
+fn put_field_u32(b : Buffer, code : Byte, value : Int32) -> Unit {
   align_buf(b, 8)
   b.write_byte(code)
   put_signature(b, "u")
@@ -327,10 +327,10 @@ fn put_field_u32(b : Buffer, code : Byte, value : Int) -> Unit {
 /// reply_serial: 对应请求的 serial；destination: 请求方的唯一名。
 pub fn build_method_return(
   destination : String,
-  reply_serial : Int,
+  reply_serial : Int32,
   body : Bytes,
   signature : String,
-  serial : Int,
+  serial : Int32,
 ) -> Bytes {
   let b = Buffer::Buffer()
   b.write_byte(0x6C) // little endian
@@ -403,7 +403,7 @@ pub fn build_dict_sv(entries : Array[(String, String)]) -> Bytes {
 
 ///|
 /// 读小端 u32（公开，供上层解析 body 使用）。
-pub fn read_le_u32_at(data : Bytes, off : Int) -> Int {
+pub fn read_le_u32_at(data : Bytes, off : Int32) -> Int32 {
   read_u32(data, off)
 }
 
@@ -422,7 +422,7 @@ pub fn build_signal(
   member : String,
   body : Bytes,
   signature : String,
-  serial : Int,
+  serial : Int32,
 ) -> Bytes {
   let b = Buffer::Buffer()
   b.write_byte(0x6C) // little endian
@@ -447,7 +447,7 @@ pub fn build_signal(
 
 ///|
 /// 构造两个 u32/i32 参数的 body（如 dbusmenu 的 LayoutUpdated(revision, parent)）。
-pub fn build_body_uu(a : Int, b2 : Int) -> Bytes {
+pub fn build_body_uu(a : Int32, b2 : Int32) -> Bytes {
   let b = Buffer::Buffer()
   put_u32(b, a)
   put_u32(b, b2)

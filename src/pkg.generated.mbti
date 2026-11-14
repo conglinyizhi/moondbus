@@ -6,88 +6,88 @@ import {
 }
 
 // Values
-pub fn build_body_uu(Int, Int) -> Bytes
+pub fn build_body_uu(Int32, Int32) -> Bytes
 
 pub fn build_dict_sv(Array[(String, String)]) -> Bytes
 
-pub fn build_method_call(String, String, String, String, Bytes, String, Int) -> Bytes
+pub fn build_method_call(String, String, String, String, Bytes, String, Int32) -> Bytes
 
-pub fn build_method_return(String, Int, Bytes, String, Int) -> Bytes
+pub fn build_method_return(String, Int32, Bytes, String, Int32) -> Bytes
 
-pub fn build_signal(String, String, String, Bytes, String, Int) -> Bytes
+pub fn build_signal(String, String, String, Bytes, String, Int32) -> Bytes
 
 pub fn build_variant_string(String) -> Bytes
 
-pub fn call(Connection, String, String, String, String, Bytes, String, Int) -> Result[Message, Int]
+pub fn call(Connection, String, String, String, String, Bytes, String, Int32) -> Result[Message, Int32]
 
-pub fn call_simple(Connection, String, String, String, String, Int) -> Result[Message, Int]
+pub fn call_simple(Connection, String, String, String, String, Int32) -> Result[Message, Int32]
 
-pub fn call_with_string(Connection, String, String, String, String, String, Int) -> Result[Message, Int]
+pub fn call_with_string(Connection, String, String, String, String, String, Int32) -> Result[Message, Int32]
 
 pub fn close(Connection) -> Unit
 
-pub fn connect_bus() -> Result[Connection, Int]
+pub fn connect_bus() -> Result[Connection, Int32]
 
-pub fn emit_signal(Connection, String, String, String, Bytes, String, Int) -> Result[Int, Int]
+pub fn emit_signal(Connection, String, String, String, Bytes, String, Int32) -> Result[Int32, Int32]
 
-pub fn getpid() -> Int
+pub fn getpid() -> Int32
 
-pub fn hello(Connection) -> Result[String, Int]
+pub fn hello(Connection) -> Result[String, Int32]
 
 pub fn parse_header_fields(Bytes) -> HeaderFields
 
 pub fn parse_message(Bytes) -> Message?
 
-pub fn read_dbus_string(Bytes, Int) -> String?
+pub fn read_dbus_string(Bytes, Int32) -> String?
 
-pub fn read_le_u32_at(Bytes, Int) -> Int
+pub fn read_le_u32_at(Bytes, Int32) -> Int32
 
-pub fn recv_message(Connection) -> Result[Bytes, Int]
+pub fn recv_message(Connection) -> Result[Bytes, Int32]
 
-pub fn recv_raw(Connection, Int) -> Result[Bytes, Int]
+pub fn recv_raw(Connection, Int32) -> Result[Bytes, Int32]
 
-pub fn request_name(Connection, String, Int, Int) -> Result[Int, Int]
+pub fn request_name(Connection, String, Int32, Int32) -> Result[Int32, Int32]
 
-pub fn send_raw(Connection, Bytes) -> Result[Int, Int]
+pub fn send_raw(Connection, Bytes) -> Result[Int32, Int32]
 
 // Errors
 
 // Types and methods
 pub struct Connection {
-  fd : Int
+  fd : Int32
 }
 
 pub struct DispatchCtx {
   iface : String
   member : String
   sender : String
-  reply_serial : Int
+  reply_serial : Int32
   body : Bytes
 }
 
 pub struct Encoder {
   buf : @buffer.Buffer
-  base : Int
+  base : Int32
 }
-pub fn Encoder::align(Self, Int) -> Unit
-pub fn Encoder::array(Self, Int, Bytes) -> Unit
-pub fn Encoder::array_with(Self, Int, (Self) -> Unit) -> Unit
+pub fn Encoder::align(Self, Int32) -> Unit
+pub fn Encoder::array(Self, Int32, Bytes) -> Unit
+pub fn Encoder::array_with(Self, Int32, (Self) -> Unit) -> Unit
 pub fn Encoder::bool(Self, Bool) -> Unit
 pub fn Encoder::byte(Self, Byte) -> Unit
 pub fn Encoder::finish(Self) -> Bytes
-pub fn Encoder::i32(Self, Int) -> Unit
-pub fn Encoder::len(Self) -> Int
+pub fn Encoder::i32(Self, Int32) -> Unit
+pub fn Encoder::len(Self) -> Int32
 pub fn Encoder::new() -> Self
-pub fn Encoder::new_at(Int) -> Self
-pub fn Encoder::pos(Self) -> Int
+pub fn Encoder::new_at(Int32) -> Self
+pub fn Encoder::pos(Self) -> Int32
 pub fn Encoder::raw(Self, Bytes) -> Unit
 pub fn Encoder::signature(Self, String) -> Unit
 pub fn Encoder::string(Self, String) -> Unit
 pub fn Encoder::struct_with(Self, (Self) -> Unit) -> Unit
-pub fn Encoder::struct_with_align(Self, Int, (Self) -> Unit) -> Unit
-pub fn Encoder::u32(Self, Int) -> Unit
+pub fn Encoder::struct_with_align(Self, Int32, (Self) -> Unit) -> Unit
+pub fn Encoder::u32(Self, Int32) -> Unit
 pub fn Encoder::variant_bool(Self, Bool) -> Unit
-pub fn Encoder::variant_i32(Self, Int) -> Unit
+pub fn Encoder::variant_i32(Self, Int32) -> Unit
 pub fn Encoder::variant_object_path(Self, String) -> Unit
 pub fn Encoder::variant_string(Self, String) -> Unit
 pub fn Encoder::variant_with(Self, String, (Self) -> Unit) -> Unit
@@ -98,15 +98,15 @@ pub struct HeaderFields {
   member : String?
   destination : String?
   sender : String?
-  reply_serial : Int?
+  reply_serial : Int32?
   signature : String?
 }
 
 pub struct Message {
   msg_type : Byte
-  serial : Int
+  serial : Int32
   body : Bytes
-  reply_serial : Int?
+  reply_serial : Int32?
 }
 
 pub(all) struct Reply {
@@ -117,13 +117,13 @@ pub fn Reply::make(Bytes, String) -> Self
 
 pub struct Server {
   conn : Connection
-  mut serial : Int
+  mut serial : Int32
 }
-pub fn Server::call_with_string(Self, String, String, String, String, String, Int) -> Result[Message, Int]
-pub fn Server::connect() -> Result[Self, Int]
-pub fn Server::emit_signal(Self, String, String, String, Bytes, String) -> Result[Int, Int]
-pub fn Server::hello(Self) -> Result[String, Int]
-pub fn Server::request_name(Self, String, Int) -> Result[Int, Int]
+pub fn Server::call_with_string(Self, String, String, String, String, String, Int32) -> Result[Message, Int32]
+pub fn Server::connect() -> Result[Self, Int32]
+pub fn Server::emit_signal(Self, String, String, String, Bytes, String) -> Result[Int32, Int32]
+pub fn Server::hello(Self) -> Result[String, Int32]
+pub fn Server::request_name(Self, String, Int32) -> Result[Int32, Int32]
 pub fn Server::serve(Self, (Self, DispatchCtx) -> Reply?) -> Unit
 
 // Type aliases

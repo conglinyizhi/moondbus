@@ -27,8 +27,8 @@ pub fn call(
   member : String,
   body : Bytes,
   signature : String,
-  serial : Int,
-) -> Result[Message, Int] {
+  serial : Int32,
+) -> Result[Message, Int32] {
   let msg = build_method_call(
     destination, path, interface, member, body, signature, serial,
   )
@@ -38,7 +38,7 @@ pub fn call(
       // 循环读消息，直到遇到 METHOD_RETURN(2) 或 ERROR(3)
       // （期间可能先收到 NameAcquired 等信号 SIGNAL(4)）
       let mut tries = 0
-      let mut result : Result[Message, Int] = Err(-1)
+      let mut result : Result[Message, Int32] = Err(-1)
       while tries < 10 {
         match recv_message(conn) {
           Err(e) => {
@@ -76,8 +76,8 @@ pub fn call_simple(
   path : String,
   interface : String,
   member : String,
-  serial : Int,
-) -> Result[Message, Int] {
+  serial : Int32,
+) -> Result[Message, Int32] {
   let empty : Bytes = Bytes::makei(0, fn(_) { 0 })
   call(conn, destination, path, interface, member, empty, "", serial)
 }
@@ -91,8 +91,8 @@ pub fn call_with_string(
   interface : String,
   member : String,
   arg : String,
-  serial : Int,
-) -> Result[Message, Int] {
+  serial : Int32,
+) -> Result[Message, Int32] {
   // body：一个 DBus string（u32 长度 + 内容 + NUL）
   let b = Buffer::Buffer()
   let bs = @utf8.encode(arg)
@@ -109,7 +109,7 @@ pub fn call_with_string(
 ///|
 /// 执行 DBus 握手 Hello（连接后必须首先调用）。
 /// 返回我们的唯一连接名（如 ":1.448"）。
-pub fn hello(conn : Connection) -> Result[String, Int] {
+pub fn hello(conn : Connection) -> Result[String, Int32] {
   match
     call_simple(
       conn, "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
@@ -130,9 +130,9 @@ pub fn hello(conn : Connection) -> Result[String, Int] {
 pub fn request_name(
   conn : Connection,
   name : String,
-  flags : Int,
-  serial : Int,
-) -> Result[Int, Int] {
+  flags : Int32,
+  serial : Int32,
+) -> Result[Int32, Int32] {
   // body: string + u32
   let b = Buffer::Buffer()
   let bs = @utf8.encode(name)
@@ -167,7 +167,7 @@ pub fn request_name(
 
 ///|
 /// 写小端 u32 到 Buffer。
-fn put_le_u32(b : Buffer, v : Int) -> Unit {
+fn put_le_u32(b : Buffer, v : Int32) -> Unit {
   let mut i = 0
   while i < 4 {
     b.write_byte(((v >> (8 * i)) & 0xFF).to_byte())
@@ -177,7 +177,7 @@ fn put_le_u32(b : Buffer, v : Int) -> Unit {
 
 ///|
 /// 读小端 u32。
-fn read_le_u32(data : Bytes, off : Int) -> Int {
+fn read_le_u32(data : Bytes, off : Int32) -> Int32 {
   let mut v = 0
   let mut i = 0
   while i < 4 && off + i < data.length() {
@@ -196,8 +196,8 @@ pub fn emit_signal(
   member : String,
   body : Bytes,
   signature : String,
-  serial : Int,
-) -> Result[Int, Int] {
+  serial : Int32,
+) -> Result[Int32, Int32] {
   let msg = build_signal(path, interface, member, body, signature, serial)
   send_raw(conn, msg)
 }
