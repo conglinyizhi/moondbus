@@ -59,7 +59,9 @@ pub fn Reply::make(body : Bytes, signature : String) -> Reply {
 /// 一个 D-Bus 服务：持有连接与回复序列号。
 pub struct Server {
   conn : Connection
-  mut serial : Int32
+  // 用 Ref：Server 是值类型，方法里对 mut 字段自增只会改到副本，
+  // 结果两条消息共用同一个 serial，D-Bus 会直接断开连接。
+  serial : Ref[Int32]
 }
 
 ///|
@@ -67,7 +69,7 @@ pub struct Server {
 pub fn Server::connect() -> Result[Server, Int32] {
   match connect_bus() {
     Err(e) => Err(e)
-    Ok(conn) => Ok({ conn, serial: 100, })
+    Ok(conn) => Ok({ conn, serial: Ref(100), })
   }
 }
 
@@ -99,15 +101,19 @@ pub fn Server::call_with_string(
   flags : Int32,
 ) -> Result[Message, Int32] {
   ignore(flags)
-  call_with_string(
+  let r = call_with_string(
     self.conn,
     destination,
     path,
     iface,
     member,
     arg,
-    self.serial,
+    self.serial.val,
   )
+  // 用完必须自增：不然这条调用和紧随其后的回复会共用同一个 serial，
+  // D-Bus 要求同一条连接上的 serial 唯一。
+  self.serial.val = self.serial.val + 1
+  r
 }
 
 ///|
@@ -127,9 +133,9 @@ pub fn Server::emit_signal(
     name,
     body,
     signature,
-    self.serial,
+    self.serial.val,
   )
-  self.serial = self.serial + 1
+  self.serial.val = self.serial.val + 1
   r
 }
 
@@ -180,10 +186,10 @@ fn Server::reply(self : Server, ctx : DispatchCtx, reply : Reply) -> Unit {
     ctx.reply_serial,
     body_text,
     reply.signature,
-    self.serial,
+    self.serial.val,
   )
   let _ = send_raw(self.conn, msg)
-  self.serial = self.serial + 1
+  self.serial.val = self.serial.val + 1
 }
 
 ///|

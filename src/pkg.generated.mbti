@@ -3,6 +3,7 @@ package "conglinyizhi/moondbus/src"
 
 import {
   "moonbitlang/core/buffer",
+  "moonbitlang/core/ref",
 }
 
 // Values
@@ -117,7 +118,7 @@ pub fn Reply::make(Bytes, String) -> Self
 
 pub struct Server {
   conn : Connection
-  mut serial : Int32
+  serial : @ref.Ref[Int32]
 }
 pub fn Server::call_with_string(Self, String, String, String, String, String, Int32) -> Result[Message, Int32]
 pub fn Server::connect() -> Result[Self, Int32]
