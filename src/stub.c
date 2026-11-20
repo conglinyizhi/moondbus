@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if !defined(__linux__)
+#error "moondbus 目前只支持 Linux：它依赖 D-Bus 会话总线（unix socket + EXTERNAL 认证）。Windows 上的 D-Bus 走 TCP 环回，macOS 也没有这个头文件组合，都还没有实现。"
+#endif
+
 #include <moonbit.h>
 #include <sys/socket.h>
 #include <sys/un.h>
