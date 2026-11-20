@@ -61,6 +61,7 @@ pub fn send_raw(Connection, Bytes) -> Result[Int32, Int32]
 pub struct Connection {
   fd : Int32
 }
+pub fn Connection::wait_readable(Self, Int32) -> Bool
 
 pub struct DispatchCtx {
   iface : String
@@ -130,6 +131,7 @@ pub fn Server::emit_signal(Self, String, String, String, Bytes, String) -> Resul
 pub fn Server::hello(Self) -> Result[String, Int32]
 pub fn Server::request_name(Self, String, Int32) -> Result[Int32, Int32]
 pub fn Server::serve(Self, (Self, DispatchCtx) -> Reply?) -> Unit
+pub fn Server::serve_with_tick(Self, (Self, DispatchCtx) -> Reply?, (Self) -> Unit, Int32) -> Unit
 
 // Type aliases
 

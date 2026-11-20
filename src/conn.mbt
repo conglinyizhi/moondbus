@@ -314,3 +314,15 @@ pub fn getpid() -> Int32 {
 
 ///|
 extern "c" fn getpid_ffi() -> Int32 = "moonbit_dbus_getpid"
+
+///|
+extern "c" fn wait_readable_raw(fd : Int32, timeout_ms : Int32) -> Int32 = "moonbit_dbus_wait_readable"
+
+///|
+/// 等这条连接可读。返回 true 表示有数据，false 表示等到超时。
+///
+/// 给常驻服务循环用：想在有消息前做点定期工作，就在这里等一小段，超时了回去干活。
+pub fn Connection::wait_readable(conn : Connection, timeout_ms : Int32) -> Bool {
+  guard_blocking("wait_readable")
+  wait_readable_raw(conn.fd, timeout_ms) > 0
+}

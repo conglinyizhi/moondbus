@@ -18,6 +18,7 @@
 
 #include <moonbit.h>
 #include <sys/socket.h>
+#include <poll.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <sys/syscall.h>
@@ -86,4 +87,16 @@ int moonbit_dbus_getpid(void) {
 MOONBIT_FFI_EXPORT
 int32_t moonbit_dbus_thread_id(void) {
   return (int32_t)syscall(SYS_gettid);
+}
+
+/* 等 fd 可读：返回 1 可读、0 超时、负数是 -errno。 */
+MOONBIT_FFI_EXPORT
+int32_t moonbit_dbus_wait_readable(int32_t fd, int32_t timeout_ms) {
+  struct pollfd p;
+  p.fd = fd;
+  p.events = POLLIN;
+  p.revents = 0;
+  int r = poll(&p, 1, timeout_ms);
+  if (r < 0) return (int32_t)-errno;
+  return r == 0 ? 0 : 1;
 }

@@ -155,20 +155,53 @@ pub fn Server::serve(
   while running {
     match recv_message(self.conn) {
       Err(_) => running = false
-      Ok(raw) =>
-        match parse_message(raw) {
-          None => ()
-          Some(m) =>
-            if m.msg_type.to_int() == 1 {
-              let fields = parse_header_fields(raw)
-              let ctx = DispatchCtx::of(m, fields)
-              match dispatch(self, ctx) {
-                Some(reply) => self.reply(ctx, reply)
-                None => ()
-              }
-            }
-        }
+      Ok(raw) => self.dispatch_raw(raw, dispatch)
     }
+  }
+}
+
+///|
+/// 同 `serve`，但每隔 `interval_ms` 没有消息时先调一次 `tick`。
+///
+/// 给「要定期刷状态」的常驻服务用：托盘刷新图标、MPRIS 更新进度之类。
+/// `tick` 里可以安全地发信号、改自己的属性。
+pub fn Server::serve_with_tick(
+  self : Server,
+  dispatch : (Server, DispatchCtx) -> Reply?,
+  tick : (Server) -> Unit,
+  interval_ms : Int32,
+) -> Unit {
+  let mut running = true
+  while running {
+    if self.conn.wait_readable(interval_ms) {
+      match recv_message(self.conn) {
+        Err(_) => running = false
+        Ok(raw) => self.dispatch_raw(raw, dispatch)
+      }
+    } else {
+      tick(self)
+    }
+  }
+}
+
+///|
+/// 处理一条已读出来的报文。
+fn Server::dispatch_raw(
+  self : Server,
+  raw : Bytes,
+  dispatch : (Server, DispatchCtx) -> Reply?,
+) -> Unit {
+  match parse_message(raw) {
+    None => ()
+    Some(m) =>
+      if m.msg_type.to_int() == 1 {
+        let fields = parse_header_fields(raw)
+        let ctx = DispatchCtx::of(m, fields)
+        match dispatch(self, ctx) {
+          Some(reply) => self.reply(ctx, reply)
+          None => ()
+        }
+      }
   }
 }
 
