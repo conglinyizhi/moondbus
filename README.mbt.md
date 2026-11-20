@@ -230,6 +230,26 @@ requester's `sender`**, otherwise the bus cannot route it back.
 See [moonsni](https://github.com/conglinyizhi/moonsni) for a complete service
 implementation (a KDE system tray icon).
 
+## 同步 API 与 async 程序
+
+moondbus 底下是**阻塞 socket**：`call`、`recv_message`、`send_raw` 会把调用它的
+那条线程一直占住，直到有数据或出错。
+
+放在普通线程、独立进程里没问题——托盘、监听器本来就是一直在等 D-Bus。
+但放进 MoonBit 的 async 事件循环线程里，整个程序会**静默卡死**：不报错、不打日志，
+只是不再响应任何东西，很难查。
+
+如果你的程序是 async 的，启动时声明一次：
+
+```moonbit
+@dbus.declare_async_thread()
+```
+
+之后在事件循环线程上再调用阻塞 API，会立刻中止并说明原因，而不是卡在那里。
+纯同步程序不要调它，调了也不会拦自己。
+
+阻塞调用应该放在独立线程（C 侧 pthread）或独立进程里，再把结果交回事件循环。
+
 ## Status & limitations
 
 Works today:
@@ -244,7 +264,7 @@ Works today:
 Not implemented yet:
 
 - System bus address transports other than filesystem Unix sockets
-- Receiving / matching signals (`AddMatch`)
+- Full signal matching rules (`AddMatch` with complex filters); simple signal reception works
 - Decoding arbitrary types (only strings and u32 are decoded today)
 - 64-bit integers, doubles, file descriptors
 - Non-EXTERNAL authentication mechanisms

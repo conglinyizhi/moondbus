@@ -96,6 +96,7 @@ pub fn close(conn : Connection) -> Unit {
 ///|
 /// 发送原始字节到连接。返回写入字节数。
 pub fn send_raw(conn : Connection, data : Bytes) -> Result[Int32, Int32] {
+  guard_blocking("send_raw")
   let w = fd_write(conn.fd, data, data.length())
   if w < 0 {
     Err(-w)
@@ -121,6 +122,7 @@ pub fn recv_raw(conn : Connection, len : Int32) -> Result[Bytes, Int32] {
 /// DBus 是流式协议，一次 read 可能含多条消息或不完整。
 /// 此函数先读 16 字节固定头，算出总长，再读剩余部分。
 pub fn recv_message(conn : Connection) -> Result[Bytes, Int32] {
+  guard_blocking("recv_message")
   // 1) 读 16 字节固定头。短读要继续读：一次 read 不保证读满，
   //    早先版本短读直接报错，会把常驻服务循环直接结束掉。
   let head_buf = Buffer::Buffer()

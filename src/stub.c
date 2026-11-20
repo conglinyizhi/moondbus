@@ -16,6 +16,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <sys/syscall.h>
 #include <errno.h>
 #include <string.h>
 
@@ -75,4 +76,10 @@ unsigned int moonbit_dbus_getuid(void) {
 MOONBIT_FFI_EXPORT
 int moonbit_dbus_getpid(void) {
   return (int)getpid();
+}
+
+/* 当前线程 id，用来识别「这条线程是不是事件循环那条」。 */
+MOONBIT_FFI_EXPORT
+int32_t moonbit_dbus_thread_id(void) {
+  return (int32_t)syscall(SYS_gettid);
 }

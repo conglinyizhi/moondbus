@@ -7,6 +7,8 @@ import {
 }
 
 // Values
+pub fn async_thread_declared() -> Bool
+
 pub fn build_body_uu(Int32, Int32) -> Bytes
 
 pub fn build_dict_sv(Array[(String, String)]) -> Bytes
@@ -28,6 +30,8 @@ pub fn call_with_string(Connection, String, String, String, String, String, Int3
 pub fn close(Connection) -> Unit
 
 pub fn connect_bus() -> Result[Connection, Int32]
+
+pub fn declare_async_thread() -> Unit
 
 pub fn emit_signal(Connection, String, String, String, Bytes, String, Int32) -> Result[Int32, Int32]
 
