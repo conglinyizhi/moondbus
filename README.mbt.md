@@ -241,7 +241,7 @@ moondbus 底下是**阻塞 socket**：`call`、`recv_message`、`send_raw` 会�
 
 如果你的程序是 async 的，启动时声明一次：
 
-```moonbit
+```moonbit nocheck
 @dbus.declare_async_thread()
 ```
 
